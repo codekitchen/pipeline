@@ -1,10 +1,10 @@
+#include <getopt.h>
+#include <ncurses.h>
+#include <readline/readline.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <readline/readline.h>
-#include <ncurses.h>
 #include <term.h>
-#include <getopt.h>
+#include <unistd.h>
 
 #define PROGRAM_NAME "pipeline"
 char *program_name = PROGRAM_NAME;
@@ -17,21 +17,18 @@ int abort_ltz(int res) {
     return res;
 }
 
-#define abort_null(ptr)         \
-    ({                          \
-        typeof(ptr) _ptr = ptr; \
-        if (!_ptr)              \
-        {                       \
-            perror(NULL);       \
-            exit(-1);           \
-        }                       \
-        _ptr;                   \
+#define abort_null(ptr)                                                        \
+    ({                                                                         \
+        typeof(ptr) _ptr = ptr;                                                \
+        if (!_ptr) {                                                           \
+            perror(NULL);                                                      \
+            exit(-1);                                                          \
+        }                                                                      \
+        _ptr;                                                                  \
     })
 
 char cmdbuf[100];
-void termput(char *cmd) {
-    putp(tgetstr(cmd, (char**)&cmdbuf));
-}
+void termput(char *cmd) { putp(tgetstr(cmd, (char **)&cmdbuf)); }
 
 void read_show_output(FILE *s, size_t *shown, size_t *total) {
     for (;;) {
@@ -40,8 +37,7 @@ void read_show_output(FILE *s, size_t *shown, size_t *total) {
         ssize_t read = getline(&line, &len, s);
         if (read < 0)
             break;
-        if (*shown < LINES - 2)
-        {
+        if (*shown < LINES - 2) {
             fputs(line, stdout); // TODO: truncate long lines
             *shown += 1;
         }
@@ -106,7 +102,7 @@ int show_preview(const char *a, int b) {
         printf("error in command: %i", last_status);
     }
     termput("me");
-    for (int i = 0; i < (shown+1); ++i) {
+    for (int i = 0; i < (shown + 1); ++i) {
         termput("up");
     }
     rl_redisplay();
@@ -121,16 +117,14 @@ int setup(const char *a, int b) {
 static struct option const long_options[] = {
     {"help", no_argument, NULL, 'h'},
     {"version", no_argument, NULL, 'v'},
-    {NULL, 0, NULL, 0}
-};
+    {NULL, 0, NULL, 0}};
 
 void usage(int status) {
     printf("Usage: %s\n", program_name);
     exit(status);
 }
 
-int main(int argc, char * const*argv)
-{
+int main(int argc, char *const *argv) {
     if (argc)
         program_name = argv[0];
     int c;
