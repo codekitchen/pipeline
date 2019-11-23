@@ -29,6 +29,8 @@ int abort_ltz(int res) {
     })
 
 char cmdbuf[100];
+// valid terminfo commands are available at `man 5 terminfo`
+// http://man7.org/linux/man-pages/man5/terminfo.5.html
 void termput(char *cmd) { putp(tgetstr(cmd, (char **)&cmdbuf)); }
 
 void read_show_output(FILE *s, size_t *shown, size_t *total) {
