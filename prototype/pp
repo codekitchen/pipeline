@@ -1,0 +1,45 @@
+#!/usr/bin/env ruby
+
+require 'open3'
+require 'tty-screen'
+require 'tty-cursor'
+require 'rbreadline'
+require 'readline'
+require 'pastel'
+
+trap("SIGINT") do
+    puts
+    print TTY::Cursor.clear_screen_down
+    puts $lastout if $lastout
+    exit(0)
+end
+
+$pastel = Pastel.new
+
+# Monkey patching because rb-readline doesn't support hooking into the '\n'
+# handler.
+def RbReadline.rl_newline(*a)
+    cpos = @_rl_last_c_pos
+    puts
+    print TTY::Cursor.clear_screen_down
+    out, stat = begin
+        Open3.capture2e(@rl_line_buffer.delete(0.chr))
+    rescue => e
+        [e.to_s, -1]
+    end
+    $lastout = out
+    lines = out.split("\n")
+    nlines = [lines.size, TTY::Screen.height - 3].min
+    print lines[0...nlines].map { |l| l[0...TTY::Screen.width] }.join("\n")
+    puts if nlines > 0
+
+    # print TTY::Cursor.move_to(0, TTY::Screen.height-1)
+    status_str = " #{lines.size} lines, showing #{nlines}"
+    status_str += " " * (TTY::Screen.width - status_str.size)
+    print $pastel.inverse(status_str)
+
+    print TTY::Cursor.up(nlines+1)
+    print TTY::Cursor.column(@_rl_last_c_pos+1)
+end
+
+Readline::readline("> ", true)
