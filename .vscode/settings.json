@@ -17,7 +17,6 @@
         "**/install-sh": true,
         "**/missing": true,
         "**/depcomp": true,
-        "**/config.h": true,
         "**/config.h.in": true,
         "**/config.status": true
     }

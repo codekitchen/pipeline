@@ -125,15 +125,22 @@ void usage(int status) {
     exit(status);
 }
 
+void version() {
+    printf("%s\n", PACKAGE_STRING);
+    exit(EXIT_SUCCESS);
+}
+
 int main(int argc, char *const *argv) {
     if (argc)
         program_name = argv[0];
     int c;
-    while ((c = getopt_long(argc, argv, "hv", long_options, NULL) != -1)) {
+    while ((c = getopt_long(argc, argv, "hv", long_options, NULL)) != -1) {
         switch (c) {
         case 'h':
-        case 'v':
             usage(EXIT_SUCCESS);
+            break;
+        case 'v':
+            version();
             break;
         default:
             usage(EXIT_FAILURE);
