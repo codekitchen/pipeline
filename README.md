@@ -5,8 +5,18 @@ doing data exploration.
 
 ## installation
 
+### MacOS
+
+Install with [Homebrew](https://brew.sh).
 ```
-autoreconf -fi              # if building from git
+brew tap codekitchen/pipeline
+brew install pipeline
+```
+
+### From Source
+
+```
+autoreconf -fi    # if building from git, skip for release tarballs
 ./configure
 make
 ```
