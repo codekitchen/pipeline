@@ -32,6 +32,7 @@ char cmdbuf[100];
 void termput(char *cmd) { putp(tgetstr(cmd, (char **)&cmdbuf)); }
 
 void read_show_output(FILE *s, size_t *shown, size_t *total) {
+    termput("cd");
     for (;;) {
         char *line = NULL;
         size_t len = 0;
@@ -92,15 +93,14 @@ int last_status = -1;
 
 int show_preview(const char *a, int b) {
     printf("\n");
-    termput("cd");
     size_t shown = 0;
     size_t total = 0;
     last_status = read_command(rl_line_buffer, &shown, &total);
     termput("mr");
     if (last_status == 0) {
-        printf("%zu lines, showing %zu", total, shown);
+        printf(" %zu lines, showing %zu ", total, shown);
     } else {
-        printf("error in command: %i", last_status);
+        printf(" error in command: %i ", last_status);
     }
     termput("me");
     for (int i = 0; i < (shown + 1); ++i) {

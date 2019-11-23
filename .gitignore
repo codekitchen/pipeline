@@ -1,6 +1,7 @@
 pipeline.dSYM
 pipeline
 *.o
+pipeline-*.tar.gz
 
 # Autotools
 .dirstamp
