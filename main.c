@@ -4,7 +4,10 @@
 #include <readline/readline.h>
 #include <ncurses.h>
 #include <term.h>
+#include <getopt.h>
 
+#define PROGRAM_NAME "pipeline"
+char *program_name = PROGRAM_NAME;
 size_t MAX_LINES = 100000;
 
 int abort_ltz(int res) {
@@ -124,8 +127,33 @@ int setup(const char *a, int b) {
     return 0;
 }
 
-int main(int argc, char const *argv[])
+static struct option const long_options[] = {
+    {"help", no_argument, NULL, 'h'},
+    {"version", no_argument, NULL, 'v'},
+    {NULL, 0, NULL, 0}
+};
+
+void usage(int status) {
+    printf("Usage: %s\n", program_name);
+    exit(status);
+}
+
+int main(int argc, char * const*argv)
 {
+    if (argc)
+        program_name = argv[0];
+    int c;
+    while ((c = getopt_long(argc, argv, "hv", long_options, NULL) != -1)) {
+        switch (c) {
+        case 'h':
+        case 'v':
+            usage(EXIT_SUCCESS);
+            break;
+        default:
+            usage(EXIT_FAILURE);
+        }
+    }
+
     setupterm(NULL, 1, NULL);
     rl_startup_hook = setup;
     char *line = readline("pipeline> ");
