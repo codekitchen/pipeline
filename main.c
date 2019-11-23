@@ -8,7 +8,6 @@
 
 #define PROGRAM_NAME "pipeline"
 char *program_name = PROGRAM_NAME;
-size_t MAX_LINES = 100000;
 
 int abort_ltz(int res) {
     if (res < 0) {
@@ -36,8 +35,6 @@ void termput(char *cmd) {
 
 void read_show_output(FILE *s, size_t *shown, size_t *total) {
     for (;;) {
-        if (*total >= MAX_LINES)
-            break;
         char *line = NULL;
         size_t len = 0;
         ssize_t read = getline(&line, &len, s);
@@ -82,13 +79,7 @@ int read_command(const char *command, size_t *shown, size_t *total) {
     fclose(c_stdout);
     int status = 0;
     waitpid(pid, &status, 0);
-    // Don't treat SIGPIPE as an error if we just closed the stream because of
-    // too much output.
-    bool errored = status != 0 &&
-        (WIFEXITED(status) ||
-        (*total >= MAX_LINES && WIFSIGNALED(status) && WTERMSIG(status) != SIGPIPE));
-    if (errored) {
-        int sig = WTERMSIG(status);
+    if (status != 0) {
         // show the stderr instead
         for (int i = 0; i < *shown; ++i)
             termput("up");
@@ -110,7 +101,7 @@ int show_preview(const char *a, int b) {
     last_status = read_command(rl_line_buffer, &shown, &total);
     termput("mr");
     if (last_status == 0) {
-        printf("%zu%s lines, showing %zu", total, total >= MAX_LINES ? "+" : "", shown);
+        printf("%zu lines, showing %zu", total, shown);
     } else {
         printf("error in command: %i", last_status);
     }
