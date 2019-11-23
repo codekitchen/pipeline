@@ -1,2 +1,23 @@
 pipeline.dSYM
 pipeline
+*.o
+
+# Autotools
+.dirstamp
+.deps/
+*.log
+stamp-h1
+autom4te.cache
+INSTALL
+Makefile
+configure
+aclocal.m4
+Makefile.in
+compile
+install-sh
+missing
+depcomp
+config.h
+config.h.in
+config.status
+Makefile

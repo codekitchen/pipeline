@@ -1,0 +1,24 @@
+{
+    "files.exclude": {
+        "**/pipeline.dSYM": true,
+        "**/pipeline": true,
+        "**/*.o": true,
+        "**/.dirstamp": true,
+        "**/.deps/": true,
+        "**/*.log": true,
+        "**/stamp-h1": true,
+        "**/autom4te.cache": true,
+        "**/INSTALL": true,
+        "**/Makefile": true,
+        "**/configure": true,
+        "**/aclocal.m4": true,
+        "**/Makefile.in": true,
+        "**/compile": true,
+        "**/install-sh": true,
+        "**/missing": true,
+        "**/depcomp": true,
+        "**/config.h": true,
+        "**/config.h.in": true,
+        "**/config.status": true
+    }
+}

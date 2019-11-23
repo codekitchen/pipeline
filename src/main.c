@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <term.h>
 #include <unistd.h>
+#include "config.h"
 
 #define PROGRAM_NAME "pipeline"
 char *program_name = PROGRAM_NAME;
