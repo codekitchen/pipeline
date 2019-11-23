@@ -42,7 +42,14 @@ void read_show_output(FILE *s, size_t *shown, size_t *total) {
         if (read < 0)
             break;
         if (*shown < LINES - 2) {
-            fputs(line, stdout); // TODO: truncate long lines
+            // sometimes newline, sometimes not, so chomp off any newline and
+            // we'll add it ourselves for consistency.
+            if (line[read-1] == '\n')
+                read -= 1;
+            // truncate lines that are wider than the screen.
+            if (read > COLS)
+                read = COLS;
+            printf("%.*s\n", (int)read, line);
             *shown += 1;
         }
         *total += 1;
