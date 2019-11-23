@@ -1,5 +1,7 @@
 m4_define([p_version],
-          m4_esyscmd_s([echo `git rev-parse --abbrev-ref HEAD`-`git describe --always --dirty`])))
+          m4_esyscmd_s([(git rev-parse --verify -q v1.0 > /dev/null &&
+                        (git describe --tags --dirty --match 'v*'|sed 's/^v//')) ||
+                        (echo `git rev-parse --abbrev-ref HEAD`-`git describe --always --dirty`)])))
 
 AC_INIT([pipeline], [p_version], [https://github.com/codekitchen/pipeline/issues], [pipeline], [https://github.com/codekitchen/pipeline])
 AM_INIT_AUTOMAKE([-Wall -Werror subdir-objects foreign])
