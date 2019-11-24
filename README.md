@@ -15,6 +15,8 @@ editing.
 
 ![](pipeline_demo.gif)
 
+Ctrl-C when you're done.
+
 ## Installation
 
 Pipeline depends only on ncurses and readline (or libedit), both of which ship with MacOS and most common Linux distros.
