@@ -115,11 +115,13 @@ int show_preview(const char *a, int b) {
     size_t total = 0;
     last_status = read_command(rl_line_buffer, &shown, &total);
     termput("mr");
+    int statsize = 0;
     if (last_status == 0) {
-        printf(" %zu lines, showing %zu ", total, shown);
+        statsize = printf(" %zu lines, showing %zu ", total, shown);
     } else {
-        printf(" error in command: %i ", last_status);
+        statsize = printf(" error in command: %i ", last_status);
     }
+    printf("%*s", COLS - statsize, "");
     termput("me");
     for (int i = 0; i < (shown + 1); ++i) {
         termput("up");
