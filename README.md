@@ -1,13 +1,28 @@
 # The `pipeline` shell command
 
-Utility to make building up a pipeline of shell commands easier, especially when
+A utility to make building up a pipeline of shell commands easier, especially when
 doing data exploration.
 
-## installation
+If you've ever found yourself writing shell code, in an endless loop of piping
+output to `less`, scanning it over and making changes, then `pipeline` can make
+your life just a little bit more beautiful.
+
+This is just a thin wrapper around your shell, not some totally new data mining
+tool. Launch pipeline, and start typing shell commands as usual. Every time you
+hit enter you'll see a one-screen preview of your output, similar to piping
+output to `less`, but your cursor will stay right where it was for further
+editing.
+
+![](pipeline_demo.gif)
+
+## Installation
+
+Pipeline depends only on ncurses and readline (or libedit), both of which ship with MacOS and most common Linux distros.
 
 ### MacOS
 
 Install with [Homebrew](https://brew.sh).
+
 ```
 brew tap codekitchen/pipeline
 brew install pipeline
@@ -26,3 +41,7 @@ After make finishes, you'll be able to use `./pipeline`. You can also install it
 ```
 sudo make install
 ```
+
+### Windows
+
+It might work under MinGW/GitBash? Please let me know.
