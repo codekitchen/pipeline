@@ -4,9 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.1] - 2019-11-24
+
 ### Changed
 
-- Make pipeline compatible with libreadline on Linux.
+- Make pipeline compatible with libreadline (tested on Ubuntu).
 
 ## [1.0] - 2019-11-23
 
