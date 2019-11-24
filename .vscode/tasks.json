@@ -4,7 +4,6 @@
             "type": "shell",
             "label": "make",
             "command": "/usr/bin/make",
-            "args": ["PIPELINE_FLAGS=-g"],
             "options": {
                 "cwd": "${workspaceFolder}"
             }

@@ -1,17 +1,26 @@
+#include "config.h"
 #include <getopt.h>
 #include <ncurses.h>
 #include <readline/readline.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/wait.h>
 #include <term.h>
 #include <unistd.h>
-#include "config.h"
 
 #define PROGRAM_NAME "pipeline"
 char *program_name = PROGRAM_NAME;
 
 int abort_ltz(int res) {
     if (res < 0) {
+        perror(NULL);
+        exit(res);
+    }
+    return res;
+}
+
+int abort_nz(int res) {
+    if (res != 0) {
         perror(NULL);
         exit(res);
     }
@@ -44,7 +53,7 @@ void read_show_output(FILE *s, size_t *shown, size_t *total) {
         if (*shown < LINES - 2) {
             // sometimes newline, sometimes not, so chomp off any newline and
             // we'll add it ourselves for consistency.
-            if (line[read-1] == '\n')
+            if (line[read - 1] == '\n')
                 read -= 1;
             // truncate lines that are wider than the screen.
             if (read > COLS)
@@ -115,12 +124,26 @@ int show_preview(const char *a, int b) {
     for (int i = 0; i < (shown + 1); ++i) {
         termput("up");
     }
-    rl_redisplay();
+    // moving the cursor left, necessary for libreadline but not libedit
+    printf("\e[9999D");
+    rl_forced_update_display();
     return 0;
 }
 
-int setup(const char *a, int b) {
-    int res = rl_add_defun("pipeline-preview", show_preview, '\n');
+int setup() {
+    // libedit wants '\n' but libreadline wants '\r'.
+    //
+    // this ifdef is a hacky way to detect whether we're using readline or
+    // libedit, I'd love to find something cleaner.
+    //
+    // also note : rl_bind_key seems to be totally broken with libedit, at least
+    // on MacOS. I have to use rl_add_defun to see any effect in that
+    // environment.
+#ifdef RL_STATE_NONE
+    abort_nz(rl_add_defun("pipeline-preview", (rl_command_func_t *)show_preview, '\r'));
+#else
+    abort_nz(rl_add_defun("pipeline-preview", (Function *)show_preview, '\n'));
+#endif
     return 0;
 }
 
