@@ -16,7 +16,7 @@ brew install pipeline
 ### From Source
 
 ```
-autoreconf -fi    # if building from git, skip for release tarballs
+autoreconf -fi    # only if building from git, skip this for release tarballs
 ./configure
 make
 ```
