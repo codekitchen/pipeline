@@ -37,13 +37,21 @@ int abort_nz(int res) {
         _ptr;                                                                  \
     })
 
-char cmdbuf[100];
-// valid terminfo commands are available at `man 5 terminfo`
+// valid terminfo short commands are available at `man 5 terminfo`
 // http://man7.org/linux/man-pages/man5/terminfo.5.html
-void termput(char *cmd) { putp(tgetstr(cmd, (char **)&cmdbuf)); }
+char cmdbuf[100];
+void termput0(char *cmd) {
+    char *b = cmdbuf;
+    putp(tgetstr(cmd, &b));
+}
+void termput1(char *cmd, int arg1) {
+    char *b = cmdbuf;
+    char *o = tgetstr(cmd, &b);
+    putp(tgoto(o, 0, arg1));
+}
 
 void read_show_output(FILE *s, size_t *shown, size_t *total) {
-    termput("cd");
+    termput0("cd");
     for (;;) {
         char *line = NULL;
         size_t len = 0;
@@ -97,8 +105,7 @@ int read_command(const char *command, size_t *shown, size_t *total) {
     waitpid(pid, &status, 0);
     if (status != 0) {
         // show the stderr instead
-        for (int i = 0; i < *shown; ++i)
-            termput("up");
+        termput1("UP", (*shown) - 1);
         *shown = *total = 0;
         read_show_output(c_stderr, shown, total);
     }
@@ -114,7 +121,7 @@ int show_preview(const char *a, int b) {
     size_t shown = 0;
     size_t total = 0;
     last_status = read_command(rl_line_buffer, &shown, &total);
-    termput("mr");
+    termput0("mr");
     int statsize = 0;
     if (last_status == 0) {
         statsize = printf(" %zu lines, showing %zu ", total, shown);
@@ -122,12 +129,10 @@ int show_preview(const char *a, int b) {
         statsize = printf(" error in command: %i ", last_status);
     }
     printf("%*s", COLS - statsize, "");
-    termput("me");
-    for (int i = 0; i < (shown + 1); ++i) {
-        termput("up");
-    }
-    // moving the cursor left, necessary for libreadline but not libedit
-    printf("\e[9999D");
+    termput0("me");
+    termput1("UP", shown + 1);
+    // moving the cursor fully left, necessary for libreadline but not libedit
+    termput1("LE", 9999);
     rl_forced_update_display();
     return 0;
 }

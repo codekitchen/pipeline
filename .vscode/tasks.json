@@ -6,7 +6,13 @@
             "command": "/usr/bin/make",
             "options": {
                 "cwd": "${workspaceFolder}"
-            }
+            },
+            "args": [
+                "CFLAGS=-g"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ]
         }
     ],
     "version": "2.0.0"
