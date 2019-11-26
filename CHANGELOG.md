@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Fixed potential crash in terminfo usage.
+- Use the C locale to better support non-ASCII in the output.
 
 ## [1.1] - 2019-11-24
 

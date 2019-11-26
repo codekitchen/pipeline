@@ -1,5 +1,6 @@
 #include "config.h"
 #include <getopt.h>
+#include <locale.h>
 #include <ncurses.h>
 #include <readline/readline.h>
 #include <stdio.h>
@@ -54,25 +55,28 @@ void read_show_output(FILE *s, size_t *shown, size_t *total) {
     termput0("cd");
     char *line = NULL;
     size_t len = 0;
-    for (;;) {
-        ssize_t read = getline(&line, &len, s);
-        if (read < 0)
-            break;
+    ssize_t read;
+    wchar_t *wideline = (wchar_t*)calloc(COLS+1, sizeof(wchar_t));
+    while ((read = getline(&line, &len, s)) >= 0) {
+        *total += 1;
+        // if we haven't filled the screen yet, display this line.
         if (*shown < LINES - 2) {
-            // sometimes newline, sometimes not, so chomp off any newline and
-            // we'll add it ourselves for consistency.
-            if (line[read - 1] == '\n')
+            // first, convert to a wchar_t string so we can easily count characters.
+            // limiting to COLS here truncates # of chars to the screen width.
+            size_t nchars = abort_ltz(mbstowcs(wideline, line, COLS));
+            // then, convert back to a byte string for display.
+            read = wcstombs(line, wideline, read);
+            // sometimes newline, sometimes not, so chomp off any newline
+            // and we'll add it ourselves for consistency.
+            if (read > 0 && line[read - 1] == '\n') {
                 read -= 1;
-            // truncate lines that are wider than the screen.
-            if (read > COLS)
-                read = COLS;
+            }
             printf("%.*s\n", (int)read, line);
             *shown += 1;
         }
-        *total += 1;
     }
-    if (line)
-        free(line);
+    free(line);
+    free(wideline);
 }
 
 int read_command(const char *command, size_t *shown, size_t *total) {
@@ -174,6 +178,7 @@ void version() {
 int main(int argc, char *const *argv) {
     if (argc)
         program_name = argv[0];
+    char *locale = setlocale(LC_ALL, "");
     int c;
     while ((c = getopt_long(argc, argv, "hv", long_options, NULL)) != -1) {
         switch (c) {
