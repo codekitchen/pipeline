@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.2] - 2019-11-25
+
 ### Changed
 
 - Fixed potential crash in terminfo usage.
