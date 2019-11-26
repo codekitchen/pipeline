@@ -52,9 +52,9 @@ void termput1(char *cmd, int arg1) {
 
 void read_show_output(FILE *s, size_t *shown, size_t *total) {
     termput0("cd");
+    char *line = NULL;
+    size_t len = 0;
     for (;;) {
-        char *line = NULL;
-        size_t len = 0;
         ssize_t read = getline(&line, &len, s);
         if (read < 0)
             break;
@@ -71,6 +71,8 @@ void read_show_output(FILE *s, size_t *shown, size_t *total) {
         }
         *total += 1;
     }
+    if (line)
+        free(line);
 }
 
 int read_command(const char *command, size_t *shown, size_t *total) {
