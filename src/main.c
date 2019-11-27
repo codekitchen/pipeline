@@ -196,7 +196,6 @@ int main(int argc, char *const *argv) {
     setupterm(NULL, 1, NULL);
     rl_startup_hook = setup;
     char *line = readline("pipeline> ");
-    if (line)
-        free(line);
+    free(line);
     return 0;
 }
