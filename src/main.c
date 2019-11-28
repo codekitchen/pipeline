@@ -89,7 +89,7 @@ ssize_t read_line(FILE *s, wchar_t **line, size_t *cap, size_t max_display_len) 
     return display_len;
 }
 
-void read_show_output(FILE *s, size_t *shown, size_t *total) {
+void read_show_output(FILE *s, size_t *count, size_t *shown, size_t *total) {
     termput0("cd");
     wchar_t *line = NULL;
     size_t cap = 0;
@@ -99,13 +99,14 @@ void read_show_output(FILE *s, size_t *shown, size_t *total) {
         // if we haven't filled the screen yet, display this line.
         if (*shown < LINES - 2) {
             printf("%ls\n", line);
+            *count += 1;
             *shown += (int)ceil((double)display_len / COLS);
         }
     }
     free(line);
 }
 
-int read_command(const char *command, size_t *shown, size_t *total) {
+int read_command(const char *command, size_t *count, size_t *shown, size_t *total) {
     int child_stdout[2];
     int child_stderr[2];
     abort_ltz(pipe(child_stdout));
@@ -128,9 +129,9 @@ int read_command(const char *command, size_t *shown, size_t *total) {
     close(child_stderr[1]);
     FILE *c_stdout = abort_null(fdopen(child_stdout[0], "r"));
     FILE *c_stderr = abort_null(fdopen(child_stderr[0], "r"));
-    *shown = *total = 0;
+    *count = *shown = *total = 0;
 
-    read_show_output(c_stdout, shown, total);
+    read_show_output(c_stdout, count, shown, total);
 
     fclose(c_stdout);
     int status = 0;
@@ -139,7 +140,7 @@ int read_command(const char *command, size_t *shown, size_t *total) {
         // show the stderr instead
         termput1("UP", (*shown) - 1);
         *shown = *total = 0;
-        read_show_output(c_stderr, shown, total);
+        read_show_output(c_stderr, count, shown, total);
     }
     fclose(c_stderr);
 
@@ -150,13 +151,14 @@ int last_status = -1;
 
 int show_preview(const char *a, int b) {
     printf("\n");
+    size_t count = 0;
     size_t shown = 0;
     size_t total = 0;
-    last_status = read_command(rl_line_buffer, &shown, &total);
+    last_status = read_command(rl_line_buffer, &count, &shown, &total);
     termput0("mr");
     int statsize = 0;
     if (last_status == 0) {
-        statsize = printf(" %zu lines, showing %zu ", total, shown);
+        statsize = printf(" %zu lines, showing %zu ", total, count);
     } else {
         statsize = printf(" error in command: %i ", last_status);
     }
