@@ -6,6 +6,7 @@
 #include <math.h>
 #include <ncurses.h>
 #include <readline/readline.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/wait.h>
@@ -200,6 +201,12 @@ int setup() {
     return 0;
 }
 
+void cleanup(int sig) {
+    printf("\n");
+    termput0("cd");
+    exit(0);
+}
+
 static struct option const long_options[] = {
     {"truncate", no_argument, NULL, 't'},
     {"help", no_argument, NULL, 'h'},
@@ -241,7 +248,10 @@ int main(int argc, char *const *argv) {
 
     setupterm(NULL, 1, NULL);
     rl_startup_hook = setup;
+    signal(SIGINT, cleanup);
     char *line = readline("pipeline> ");
+    // as far as I'm aware, we'll never reach this point because
+    // we always exit with Ctrl-C.
     free(line);
     return 0;
 }
