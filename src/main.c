@@ -1,6 +1,7 @@
 #include "config.h"
 #include <getopt.h>
 #include <locale.h>
+#include <math.h>
 #include <ncurses.h>
 #include <readline/readline.h>
 #include <stdio.h>
@@ -12,6 +13,8 @@
 
 #define PROGRAM_NAME "pipeline"
 char *program_name = PROGRAM_NAME;
+
+bool truncate_lines = false;
 
 int abort_ltz(int res) {
     if (res < 0) {
@@ -91,12 +94,12 @@ void read_show_output(FILE *s, size_t *shown, size_t *total) {
     wchar_t *line = NULL;
     size_t cap = 0;
     ssize_t display_len;
-    while ((display_len = read_line(s, &line, &cap, COLS)) >= 0) {
+    while ((display_len = read_line(s, &line, &cap, truncate_lines ? COLS : SIZE_MAX)) >= 0) {
         *total += 1;
         // if we haven't filled the screen yet, display this line.
         if (*shown < LINES - 2) {
             printf("%ls\n", line);
-            *shown += 1;
+            *shown += (int)ceil((double)display_len / COLS);
         }
     }
     free(line);
@@ -184,12 +187,15 @@ int setup() {
 }
 
 static struct option const long_options[] = {
+    {"truncate", no_argument, NULL, 't'},
     {"help", no_argument, NULL, 'h'},
     {"version", no_argument, NULL, 'v'},
     {NULL, 0, NULL, 0}};
 
 void usage(int status) {
-    printf("Usage: %s\n", program_name);
+    printf("Usage: %s [OPTIONS]\n", program_name);
+    printf("\n");
+    printf("    -t, --truncate    Truncate long lines rather than  wrapping.\n");
     exit(status);
 }
 
@@ -203,16 +209,19 @@ int main(int argc, char *const *argv) {
         program_name = argv[0];
     char *locale = setlocale(LC_ALL, "");
     int c;
-    while ((c = getopt_long(argc, argv, "hv", long_options, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, "thv", long_options, NULL)) != -1) {
         switch (c) {
-        case 'h':
-            usage(EXIT_SUCCESS);
-            break;
-        case 'v':
-            version();
-            break;
-        default:
-            usage(EXIT_FAILURE);
+            case 't':
+                truncate_lines = true;
+                break;
+            case 'h':
+                usage(EXIT_SUCCESS);
+                break;
+            case 'v':
+                version();
+                break;
+            default:
+                usage(EXIT_FAILURE);
         }
     }
 
