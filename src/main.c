@@ -8,6 +8,7 @@
 #include <sys/wait.h>
 #include <term.h>
 #include <unistd.h>
+#include <wchar.h>
 
 #define PROGRAM_NAME "pipeline"
 char *program_name = PROGRAM_NAME;
@@ -51,32 +52,54 @@ void termput1(char *cmd, int arg1) {
     putp(tgoto(o, 0, arg1));
 }
 
+void str_append(wchar_t **line, ssize_t *len, size_t *cap, wchar_t c) {
+    if (*len == *cap) {
+        *cap = *cap < 255 ? 255 : *cap * 2;
+        *line = abort_null(realloc(*line, *cap * sizeof(wchar_t)));
+    }
+    (*line)[(*len)++] = c;
+}
+
+ssize_t read_line(FILE *s, wchar_t **line, size_t *cap, size_t max_display_len) {
+    ssize_t display_len = 0;
+    ssize_t len = 0;
+    for (;;) {
+        wchar_t c = fgetwc(s);
+        if (c == WEOF) {
+            abort_nz(ferror(s));
+            if (len == 0)
+                return -1;
+            break;
+        }
+        if (c == L'\n') {
+            // don't append the newline
+            break;
+        }
+        int c_len = wcwidth(c);
+        if ((display_len + c_len) > max_display_len) {
+            continue;
+        }
+        str_append(line, &len, cap, c);
+        display_len += c_len;
+    }
+    str_append(line, &len, cap, 0);
+    return display_len;
+}
+
 void read_show_output(FILE *s, size_t *shown, size_t *total) {
     termput0("cd");
-    char *line = NULL;
-    size_t len = 0;
-    ssize_t read;
-    wchar_t *wideline = (wchar_t*)calloc(COLS+1, sizeof(wchar_t));
-    while ((read = getline(&line, &len, s)) >= 0) {
+    wchar_t *line = NULL;
+    size_t cap = 0;
+    ssize_t display_len;
+    while ((display_len = read_line(s, &line, &cap, COLS)) >= 0) {
         *total += 1;
         // if we haven't filled the screen yet, display this line.
         if (*shown < LINES - 2) {
-            // first, convert to a wchar_t string so we can easily count characters.
-            // limiting to COLS here truncates # of chars to the screen width.
-            size_t nchars = abort_ltz(mbstowcs(wideline, line, COLS));
-            // then, convert back to a byte string for display.
-            read = wcstombs(line, wideline, read);
-            // sometimes newline, sometimes not, so chomp off any newline
-            // and we'll add it ourselves for consistency.
-            if (read > 0 && line[read - 1] == '\n') {
-                read -= 1;
-            }
-            printf("%.*s\n", (int)read, line);
+            printf("%ls\n", line);
             *shown += 1;
         }
     }
     free(line);
-    free(wideline);
 }
 
 int read_command(const char *command, size_t *shown, size_t *total) {
