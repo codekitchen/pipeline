@@ -63,6 +63,12 @@ void str_append(wchar_t **line, ssize_t *len, size_t *cap, wchar_t c) {
     (*line)[(*len)++] = c;
 }
 
+// Follows the same general pattern as libc's getline(), but reads into a
+// wchar_t string and throws away the rest of the line once max_display_len is
+// reached.
+// Note this is *display* length, not character length. A single unicode character
+// doesn't always display as a single visual character on the terminal.
+// Returns the calculated display_length, or -1 on EOF/error.
 ssize_t read_line(FILE *s, wchar_t **line, size_t *cap, size_t max_display_len) {
     ssize_t display_len = 0;
     ssize_t len = 0;
@@ -89,6 +95,7 @@ ssize_t read_line(FILE *s, wchar_t **line, size_t *cap, size_t max_display_len) 
     return display_len;
 }
 
+// Read the file stream and show the first page of output.
 void read_show_output(FILE *s, size_t *count, size_t *shown, size_t *total) {
     termput0("cd");
     wchar_t *line = NULL;
@@ -106,6 +113,8 @@ void read_show_output(FILE *s, size_t *count, size_t *shown, size_t *total) {
     free(line);
 }
 
+// Fork the child process, run the given command in shell. Prints the first page
+// of stdout on success, or stderr on failure.
 int read_command(const char *command, size_t *count, size_t *shown, size_t *total) {
     int child_stdout[2];
     int child_stderr[2];
@@ -147,14 +156,14 @@ int read_command(const char *command, size_t *count, size_t *shown, size_t *tota
     return WEXITSTATUS(status);
 }
 
-int last_status = -1;
-
+// Run the current command string and display the first page of results.
+// Args are passed in by readline and ignored.
 int show_preview(const char *a, int b) {
     printf("\n");
     size_t count = 0;
     size_t shown = 0;
     size_t total = 0;
-    last_status = read_command(rl_line_buffer, &count, &shown, &total);
+    int last_status = read_command(rl_line_buffer, &count, &shown, &total);
     termput0("mr");
     int statsize = 0;
     if (last_status == 0) {
@@ -171,6 +180,7 @@ int show_preview(const char *a, int b) {
     return 0;
 }
 
+// Called on readline startup to inject the newline hook.
 int setup() {
     // libedit wants '\n' but libreadline wants '\r'.
     //
