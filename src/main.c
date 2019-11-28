@@ -1,3 +1,5 @@
+#define _XOPEN_SOURCE // required by linux
+
 #include "config.h"
 #include <getopt.h>
 #include <locale.h>
