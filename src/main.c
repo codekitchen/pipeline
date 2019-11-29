@@ -59,27 +59,9 @@ void termput1(char *cmd, int arg1) {
     putp(tgoto(o, 0, arg1));
 }
 
-void str_append(wchar_t **line, ssize_t *len, size_t *cap, wchar_t c) {
-    // Note that cap (and len) are # of wchar_t not # of bytes.
-    if (*len == *cap) {
-        *cap = *cap < 255 ? 255 : *cap * 2;
-        *line = abort_null(realloc(*line, *cap * sizeof(wchar_t)));
-        // This memset isn't strictly necessary because we zero-terminate the
-        // string later. But valgrind sees uninitialized reads in printf because
-        // it uses vector operators that read past the zero, so rather than add
-        // suppressions I'm just zeroing all the buffer.
-        memset((*line) + (*len), 0, ((*cap) - (*len)) * sizeof(wchar_t));
-    }
-    (*line)[(*len)++] = c;
-}
-
-// Follows the same general pattern as libc's getline(), but reads into a
-// wchar_t string and throws away the rest of the line once max_display_len is
-// reached.
-// Note this is *display* length, not character length. A single unicode character
-// doesn't always display as a single visual character on the terminal.
-// Returns the calculated display_length, or -1 on EOF/error.
-ssize_t read_line(FILE *s, wchar_t **line, size_t *cap, size_t max_display_len) {
+// Read a single line from s and print it out. Once max_display_len is reached,
+// keep scanning for the rest of the line but don't print anymore.
+ssize_t read_line(FILE *s, size_t max_display_len) {
     ssize_t display_len = 0;
     ssize_t len = 0;
     for (;;) {
@@ -91,40 +73,37 @@ ssize_t read_line(FILE *s, wchar_t **line, size_t *cap, size_t max_display_len) 
             break;
         }
         if (c == L'\n') {
-            // don't append the newline
             break;
         }
         int c_len = wcwidth(c);
         if ((display_len + c_len) > max_display_len) {
             continue;
         }
-        str_append(line, &len, cap, c);
+        putwchar(c);
         display_len += c_len;
     }
-    str_append(line, &len, cap, 0);
+    if (max_display_len > 0)
+        putwchar(L'\n');
     return display_len;
 }
 
 // Read the file stream and show the first page of output.
 void read_show_output(FILE *s, size_t *count, size_t *shown, size_t *total) {
     termput0("cd");
-    wchar_t *line = NULL;
-    size_t cap = 0;
+    int lines_left = LINES - 2;
     for (;;) {
-        int lines_left = LINES - 2 - *shown;
         ssize_t display_len =
-            read_line(s, &line, &cap, truncate_lines ? COLS : COLS * lines_left);
+            read_line(s, truncate_lines ? COLS : COLS * lines_left);
         if (display_len < 0)
             break;
         *total += 1;
-        // if we haven't filled the screen yet, display this line.
         if (lines_left > 0) {
-            printf("%ls\n", line);
             *count += 1;
-            *shown += (int)ceil((double)display_len / COLS);
+            int nlines = (int)ceil((double)display_len / COLS);
+            lines_left -= nlines;
+            *shown += nlines;
         }
     }
-    free(line);
 }
 
 // Fork the child process, run the given command in shell. Prints the first page
@@ -227,7 +206,7 @@ static struct option const long_options[] = {
 void usage(int status) {
     printf("Usage: %s [OPTIONS]\n", program_name);
     printf("\n");
-    printf("    -t, --truncate    Truncate long lines rather than  wrapping.\n");
+    printf("    -t, --truncate    Truncate long lines rather than wrapping.\n");
     exit(status);
 }
 
