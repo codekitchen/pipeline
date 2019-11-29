@@ -110,11 +110,15 @@ void read_show_output(FILE *s, size_t *count, size_t *shown, size_t *total) {
     termput0("cd");
     wchar_t *line = NULL;
     size_t cap = 0;
-    ssize_t display_len;
-    while ((display_len = read_line(s, &line, &cap, truncate_lines ? COLS : SIZE_MAX)) >= 0) {
+    for (;;) {
+        int lines_left = LINES - 2 - *shown;
+        ssize_t display_len =
+            read_line(s, &line, &cap, truncate_lines ? COLS : COLS * lines_left);
+        if (display_len < 0)
+            break;
         *total += 1;
         // if we haven't filled the screen yet, display this line.
-        if (*shown < LINES - 2) {
+        if (lines_left > 0) {
             printf("%ls\n", line);
             *count += 1;
             *shown += (int)ceil((double)display_len / COLS);
