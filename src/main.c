@@ -72,13 +72,11 @@ ssize_t read_line(FILE *s, size_t max_display_len) {
                 return -1;
             break;
         }
-        if (c == L'\n') {
+        if (c == L'\n')
             break;
-        }
         int c_len = wcwidth(c);
-        if ((display_len + c_len) > max_display_len) {
+        if ((display_len + c_len) > max_display_len)
             continue;
-        }
         putwchar(c);
         display_len += c_len;
     }
@@ -222,17 +220,17 @@ int main(int argc, char *const *argv) {
     int c;
     while ((c = getopt_long(argc, argv, "thv", long_options, NULL)) != -1) {
         switch (c) {
-            case 't':
-                truncate_lines = true;
-                break;
-            case 'h':
-                usage(EXIT_SUCCESS);
-                break;
-            case 'v':
-                version();
-                break;
-            default:
-                usage(EXIT_FAILURE);
+        case 't':
+            truncate_lines = true;
+            break;
+        case 'h':
+            usage(EXIT_SUCCESS);
+            break;
+        case 'v':
+            version();
+            break;
+        default:
+            usage(EXIT_FAILURE);
         }
     }
 
