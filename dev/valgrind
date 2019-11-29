@@ -1,0 +1,3 @@
+#!/bin/bash
+
+valgrind --log-file=valgrind.log --track-origins=yes ./pipeline

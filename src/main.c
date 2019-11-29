@@ -9,6 +9,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/wait.h>
 #include <term.h>
 #include <unistd.h>
@@ -59,9 +60,15 @@ void termput1(char *cmd, int arg1) {
 }
 
 void str_append(wchar_t **line, ssize_t *len, size_t *cap, wchar_t c) {
+    // Note that cap (and len) are # of wchar_t not # of bytes.
     if (*len == *cap) {
         *cap = *cap < 255 ? 255 : *cap * 2;
         *line = abort_null(realloc(*line, *cap * sizeof(wchar_t)));
+        // This memset isn't strictly necessary because we zero-terminate the
+        // string later. But valgrind sees uninitialized reads in printf because
+        // it uses vector operators that read past the zero, so rather than add
+        // suppressions I'm just zeroing all the buffer.
+        memset((*line) + (*len), 0, ((*cap) - (*len)) * sizeof(wchar_t));
     }
     (*line)[(*len)++] = c;
 }
