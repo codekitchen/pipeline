@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.3] - 2019-11-29
+
 ### Changed
 
 - Long lines wrap by default, rather than truncating.
@@ -11,7 +13,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Added -t/--truncate option to truncate long lines rather than wrapping.
+- Added -t/--truncate option to truncate long lines rather than wrapping (used
+  to be the default behavior).
 
 ## [1.2] - 2019-11-25
 
