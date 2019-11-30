@@ -11,6 +11,8 @@ jobs:
     name: Create Release
     runs-on: ubuntu-latest
     steps:
+      - uses: olegtarasov/get-tag@j1
+        id: tagName
       - name: Checkout code
         uses: actions/checkout@v1
       - name: install prereqs
@@ -38,6 +40,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ./pipeline-${{ github.ref }}.tar.gz
-          asset_name: pipeline-${{ github.ref }}.tar.gz
+          asset_path: ./pipeline-${{ steps.tagName.outputs.tag }}.tar.gz
+          asset_name: pipeline-${{ steps.tagName.outputs.tag }}.tar.gz
           asset_content_type: application/gzip
