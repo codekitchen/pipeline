@@ -62,8 +62,8 @@ void termput1(char *cmd, int arg1) {
 // Read a single line from s and print it out. Once max_display_len is reached,
 // keep scanning for the rest of the line but don't print anymore.
 ssize_t read_line(FILE *s, size_t max_display_len) {
-    ssize_t display_len = 0;
-    ssize_t len = 0;
+    ssize_t display_len = 0; // number of printed columns
+    ssize_t len = 0; // number of chars read
     for (;;) {
         wchar_t c = fgetwc(s);
         if (c == WEOF) {
@@ -72,6 +72,7 @@ ssize_t read_line(FILE *s, size_t max_display_len) {
                 return -1;
             break;
         }
+        ++len;
         if (c == L'\n')
             break;
         int c_len = wcwidth(c);
