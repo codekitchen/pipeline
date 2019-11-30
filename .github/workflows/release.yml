@@ -11,7 +11,7 @@ jobs:
     name: Create Release
     runs-on: ubuntu-latest
     steps:
-      - uses: olegtarasov/get-tag@j1
+      - uses: olegtarasov/get-tag@v1
         id: tagName
       - name: Checkout code
         uses: actions/checkout@v1
