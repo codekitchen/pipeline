@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <sys/wait.h>
 #include <term.h>
 #include <unistd.h>
@@ -19,6 +20,7 @@
 char *program_name = PROGRAM_NAME;
 
 bool truncate_lines = false;
+int s_lines, s_cols;
 
 int abort_ltz(int res) {
     if (res < 0) {
@@ -89,16 +91,16 @@ ssize_t read_line(FILE *s, size_t max_display_len) {
 // Read the file stream and show the first page of output.
 void read_show_output(FILE *s, size_t *count, size_t *shown, size_t *total) {
     termput0("cd");
-    int lines_left = LINES - 2;
+    int lines_left = s_lines - 2;
     for (;;) {
         ssize_t display_len =
-            read_line(s, truncate_lines ? COLS : COLS * lines_left);
+            read_line(s, truncate_lines ? s_cols : s_cols * lines_left);
         if (display_len < 0)
             break;
         *total += 1;
         if (lines_left > 0) {
             *count += 1;
-            int nlines = (int)ceil((double)display_len / COLS);
+            int nlines = (int)ceil((double)display_len / s_cols);
             lines_left -= nlines;
             *shown += nlines;
         }
@@ -151,6 +153,12 @@ int read_command(const char *command, size_t *count, size_t *shown, size_t *tota
 // Run the current command string and display the first page of results.
 // Args are passed in by readline and ignored.
 int show_preview(const char *a, int b) {
+    // Get the current window dimensions
+    struct winsize sizes;
+    abort_ltz(ioctl(0, TIOCGWINSZ, &sizes));
+    s_lines = sizes.ws_row;
+    s_cols = sizes.ws_col;
+
     printf("\n");
     size_t count = 0;
     size_t shown = 0;
@@ -163,7 +171,7 @@ int show_preview(const char *a, int b) {
     } else {
         statsize = printf(" error in command: %i ", last_status);
     }
-    printf("%*s", COLS - statsize, "");
+    printf("%*s", s_cols - statsize, "");
     termput0("me");
     termput1("UP", shown + 1);
     // moving the cursor fully left, necessary for libreadline but not libedit
@@ -217,7 +225,7 @@ void version() {
 int main(int argc, char *const *argv) {
     if (argc)
         program_name = argv[0];
-    char *locale = setlocale(LC_ALL, "");
+    setlocale(LC_ALL, "");
     int c;
     while ((c = getopt_long(argc, argv, "thv", long_options, NULL)) != -1) {
         switch (c) {

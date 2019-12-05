@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Basic support for reacting to terminal resizes.
+
+### Fixed
+
+- Fix for output not ending in a newline.
+
 ## [1.3] - 2019-11-29
 
 ### Changed
