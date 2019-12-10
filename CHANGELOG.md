@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.4] - 2019-12-10
+
 ### Added
 
 - Basic support for reacting to terminal resizes.
