@@ -6,10 +6,10 @@ m4_define([p_version],
 AC_INIT([pipeline], [p_version], [https://github.com/codekitchen/pipeline/issues], [pipeline], [https://github.com/codekitchen/pipeline])
 AM_INIT_AUTOMAKE([-Wall -Werror subdir-objects foreign])
 AC_PROG_CC
-AC_SEARCH_LIBS(readline, readline)
-AC_SEARCH_LIBS(setupterm, ncurses)
+AC_SEARCH_LIBS(readline, readline, [], [AC_MSG_ERROR([libreadline not found])])
+AC_SEARCH_LIBS(setupterm, ncurses, [], [AC_MSG_ERROR([libncurses not found])])
 AC_CONFIG_HEADERS([config.h])
-AC_CHECK_HEADERS([stdlib.h unistd.h])
+AC_CHECK_HEADERS([stdlib.h unistd.h], [], [AC_MSG_ERROR([required headers not found])])
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_SIZE_T
 AC_TYPE_SSIZE_T
