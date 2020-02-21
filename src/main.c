@@ -89,6 +89,11 @@ ssize_t read_line(FILE *s, size_t max_display_len) {
 }
 
 // Read the file stream and show the first page of output.
+// `count` is the number of logical lines shown on screen.
+// `shown` is the number of actual screen lines printed to,
+//   which can be more than `count` when long logical lines wrap to multiple lines on-screen.
+// `total` is the total number of logical lines in the output.
+// (where "logical lines" means lines separated by \n chars)
 void read_show_output(FILE *s, size_t *count, size_t *shown, size_t *total) {
     termput0("cd");
     int lines_left = s_lines - 2;
@@ -100,7 +105,10 @@ void read_show_output(FILE *s, size_t *count, size_t *shown, size_t *total) {
         *total += 1;
         if (lines_left > 0) {
             *count += 1;
-            int nlines = (int)ceil((double)display_len / s_cols);
+            int nlines = 1;
+            // If we wrapped, find the actual number of screen lines printed to.
+            if (display_len > s_cols)
+                nlines = (int)ceil((double)display_len / s_cols);
             lines_left -= nlines;
             *shown += nlines;
         }
