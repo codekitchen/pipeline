@@ -98,8 +98,12 @@ void read_show_output(FILE *s, size_t *count, size_t *shown, size_t *total) {
     termput0("cd");
     int lines_left = s_lines - 2;
     for (;;) {
-        ssize_t display_len =
-            read_line(s, truncate_lines ? s_cols : s_cols * lines_left);
+        size_t max_display_len;
+        if (truncate_lines)
+            max_display_len = lines_left > 0 ? s_cols : 0;
+        else
+            max_display_len = s_cols * lines_left;
+        ssize_t display_len = read_line(s, max_display_len);
         if (display_len < 0)
             break;
         *total += 1;
