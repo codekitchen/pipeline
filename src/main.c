@@ -16,6 +16,12 @@
 #include <unistd.h>
 #include <wchar.h>
 
+// this ifdef is a hacky way to detect whether we're using readline or
+// libedit, I'd love to find something cleaner.
+#ifdef RL_STATE_NONE
+#define USING_READLINE 1
+#endif
+
 #define PROGRAM_NAME "pipeline"
 char *program_name = PROGRAM_NAME;
 
@@ -192,18 +198,27 @@ int show_preview(const char *a, int b) {
     return 0;
 }
 
+#ifdef USING_READLINE
+void bind_by_keymap_name(const char* name) {
+    Keymap keymap = rl_get_keymap_by_name(name);
+    if (keymap) {
+        abort_nz(rl_bind_key_in_map('\r', (rl_command_func_t *)show_preview, keymap));
+    }
+}
+#endif
+
 // Called on readline startup to inject the newline hook.
 int setup() {
     // libedit wants '\n' but libreadline wants '\r'.
     //
-    // this ifdef is a hacky way to detect whether we're using readline or
-    // libedit, I'd love to find something cleaner.
-    //
     // also note : rl_bind_key seems to be totally broken with libedit, at least
     // on MacOS. I have to use rl_add_defun to see any effect in that
     // environment.
-#ifdef RL_STATE_NONE
+#ifdef USING_READLINE
     abort_nz(rl_add_defun("pipeline-preview", (rl_command_func_t *)show_preview, '\r'));
+    bind_by_keymap_name("emacs");
+    bind_by_keymap_name("vi-insert");
+    bind_by_keymap_name("vi-command");
 #else
     abort_nz(rl_add_defun("pipeline-preview", (Function *)show_preview, '\n'));
 #endif
