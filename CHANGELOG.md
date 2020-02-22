@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix display error when the output is nothing but newlines.
+- Fix for pressing enter when in readline vi command mode (or switching between emacs and vi modes after starting pipeline).
+- Fix `-t` truncate mode printing too much output.
+
 ## [1.4] - 2019-12-10
 
 ### Added
