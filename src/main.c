@@ -159,8 +159,9 @@ int read_command(const char *command, size_t *count, size_t *shown, size_t *tota
     waitpid(pid, &status, 0);
     if (status != 0) {
         // show the stderr instead
-        termput1("UP", (*shown) - 1);
-        *shown = *total = 0;
+        if ((*shown) > 0)
+            termput1("UP", *shown);
+        *count = *shown = *total = 0;
         read_show_output(c_stderr, count, shown, total);
     }
     fclose(c_stderr);
