@@ -19,7 +19,11 @@ git commit -am "v$VERSION"
 git tag "v$VERSION"
 REF=$(git show-ref -s "v$VERSION")
 
-rm pipeline-*.tar.gz
+rm -f pipeline-*.tar.gz
+make distclean
+autoreconf -fi
+rm config.h.in~
+./configure
 make dist
 SHA256=$(shasum -a 256 $TARBALL|awk '{print $1}')
 
