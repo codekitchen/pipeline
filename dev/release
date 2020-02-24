@@ -10,9 +10,9 @@ TODAY=$(date "+%Y-%m-%d")
 
 : ${VERSION:?"Need to specify a version e.g. 2.0.1"}
 
-sed -i '' $'s/## [Unreleased]/## [Unreleased]\
+sed -i '' $'s/## \[Unreleased\]/## \[Unreleased\]\
 \
-## '"$VERSION - $TODAY/g" CHANGELOG.md
+## '"[$VERSION] - $TODAY/g" CHANGELOG.md
 
 git commit -am "v$VERSION"
 git tag "v$VERSION"
