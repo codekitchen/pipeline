@@ -7,6 +7,7 @@ set -e
 
 VERSION=$1
 TODAY=$(date "+%Y-%m-%d")
+TARBALL=pipeline-$version.tar.gz
 
 : ${VERSION:?"Need to specify a version e.g. 2.0.1"}
 
@@ -18,8 +19,13 @@ git commit -am "v$VERSION"
 git tag "v$VERSION"
 REF=$(git show-ref -s "v$VERSION")
 
+rm pipeline-*.tar.gz
+make dist
+SHA256=$(shasum -a 256 $TARBALL|awk '{print $1}')
+
 pushd ../homebrew-pipeline
-sed -i '' 's|  url ".*|  url "https://github.com/codekitchen/pipeline.git", :tag => "v'$VERSION'", :revision => "'$REF'"|' pipeline.rb
+sed -i '' 's|  url ".*releases.*|  url "https://github.com/codekitchen/pipeline/releases/download/v'$VERSION'/'$TARBALL'"|' pipeline.rb
+sed -i '' 's|  sha256 ".*|  sha256 "'$SHA256'"|' pipeline.rb
 git commit -am "release v$VERSION"
 popd
 
@@ -27,6 +33,8 @@ read -p "Press [Enter] to continue release..."
 
 git push origin master:master
 git push origin "v$VERSION"
+
+hub release create -o -a $TARBALL "v$VERSION"
 
 pushd ../homebrew-pipeline
 git push origin master:master
