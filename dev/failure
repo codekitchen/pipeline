@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+
+puts 'a'
+puts 'b'
+puts 'c'
+$stdout.flush()
+raise 'crap'
