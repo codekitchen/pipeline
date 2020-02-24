@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -e
+
+# This release script assumes that you have codekitchen/homebrew-pipeline checked
+# out as a sibling to this pipeline checkout.
+
+VERSION=$1
+TODAY=$(date "+%Y-%m-%d")
+
+: ${VERSION:?"Need to specify a version e.g. 2.0.1"}
+
+sed -i '' $'s/## [Unreleased]/## [Unreleased]\
+\
+## '"$VERSION - $TODAY/g" CHANGELOG.md
+
+git commit -am "v$VERSION"
+git tag "v$VERSION"
+REF=$(git show-ref -s "v$VERSION")
+
+pushd ../homebrew-pipeline
+sed -i '' 's|  url ".*|  url "https://github.com/codekitchen/pipeline.git", :tag => "v'$VERSION'", :revision => "'$REF'"|' pipeline.rb
+git commit -am "release v$VERSION"
+popd
+
+read -p "Press [Enter] to continue release..."
+
+git push origin master:master
+git push origin "v$VERSION"
+
+pushd ../homebrew-pipeline
+git push origin master:master
+popd
