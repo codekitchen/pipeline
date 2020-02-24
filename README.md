@@ -32,6 +32,8 @@ brew install pipeline
 
 ### From Source
 
+You can download the latest release tarball from the [releases page](https://github.com/codekitchen/pipeline/releases), or git clone the repo to build the master branch.
+
 ```
 autoreconf -fi    # only if building from git, skip this for release tarballs
 ./configure
