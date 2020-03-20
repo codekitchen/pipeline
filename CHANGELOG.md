@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix display errors when the command line wraps or the cursor is in the middle of a longer command.
+
 ## [1.5] - 2020-02-24
 
 ### Fixed

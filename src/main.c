@@ -24,6 +24,8 @@
 
 #define PROGRAM_NAME "pipeline"
 char *program_name = PROGRAM_NAME;
+const char *prompt = "pipeline> ";
+const size_t prompt_width = 10;
 
 bool truncate_lines = false;
 int s_lines, s_cols;
@@ -100,9 +102,9 @@ ssize_t read_line(FILE *s, size_t max_display_len) {
 //   which can be more than `count` when long logical lines wrap to multiple lines on-screen.
 // `total` is the total number of logical lines in the output.
 // (where "logical lines" means lines separated by \n chars)
-void read_show_output(FILE *s, size_t *count, size_t *shown, size_t *total) {
+void read_show_output(size_t max_to_show, FILE *s, size_t *count, size_t *shown, size_t *total) {
     termput0("cd");
-    int lines_left = s_lines - 2;
+    int lines_left = max_to_show;
     for (;;) {
         size_t max_display_len;
         if (truncate_lines)
@@ -127,7 +129,7 @@ void read_show_output(FILE *s, size_t *count, size_t *shown, size_t *total) {
 
 // Fork the child process, run the given command in shell. Prints the first page
 // of stdout on success, or stderr on failure.
-int read_command(const char *command, size_t *count, size_t *shown, size_t *total) {
+int read_command(size_t max_to_show, const char *command, size_t *count, size_t *shown, size_t *total) {
     int child_stdout[2];
     int child_stderr[2];
     abort_ltz(pipe(child_stdout));
@@ -152,7 +154,7 @@ int read_command(const char *command, size_t *count, size_t *shown, size_t *tota
     FILE *c_stderr = abort_null(fdopen(child_stderr[0], "r"));
     *count = *shown = *total = 0;
 
-    read_show_output(c_stdout, count, shown, total);
+    read_show_output(max_to_show, c_stdout, count, shown, total);
 
     fclose(c_stdout);
     int status = 0;
@@ -162,7 +164,7 @@ int read_command(const char *command, size_t *count, size_t *shown, size_t *tota
         if ((*shown) > 0)
             termput1("UP", *shown);
         *count = *shown = *total = 0;
-        read_show_output(c_stderr, count, shown, total);
+        read_show_output(max_to_show, c_stderr, count, shown, total);
     }
     fclose(c_stderr);
 
@@ -171,18 +173,43 @@ int read_command(const char *command, size_t *count, size_t *shown, size_t *tota
 
 // Run the current command string and display the first page of results.
 // Args are passed in by readline and ignored.
-int show_preview(const char *a, int b) {
+int show_preview(const char *_a, int _b) {
     // Get the current window dimensions
     struct winsize sizes;
     abort_ltz(ioctl(0, TIOCGWINSZ, &sizes));
     s_lines = sizes.ws_row;
     s_cols = sizes.ws_col;
 
-    printf("\n");
+    // Add 1 to the width for the cursor on the end, it makes the output
+    // cleaner when the command is exactly at the screen width.
+    size_t command_width = prompt_width + rl_end + 1;
+    size_t command_lines = (size_t)ceil((double)command_width / s_cols);
+
+    // Move the cursor to the beginning of the command line
+    // so we know where we are.
+    size_t cursor_pos = prompt_width + rl_point;
+    while (cursor_pos >= s_cols) {
+        termput0("up");
+        cursor_pos -= s_cols;
+    }
+    if (cursor_pos > 0)
+        termput1("LE", cursor_pos);
+
+    // Now move the cursor one line below the command line.
+    // Printing newlines rather than using termput("DO") here because
+    // we might be at the bottom of the window, and we can't just
+    // move down from there.
+    for (int i = 0; i < command_lines; ++i)
+        printf("\n");
+
+    // Display the output
+    size_t max_to_show = s_lines - (command_lines + 1);
     size_t count = 0;
     size_t shown = 0;
     size_t total = 0;
-    int last_status = read_command(rl_line_buffer, &count, &shown, &total);
+    int last_status = read_command(max_to_show, rl_line_buffer, &count, &shown, &total);
+
+    // Display the status line in reversed video
     termput0("mr");
     int statsize = 0;
     if (last_status == 0) {
@@ -192,10 +219,13 @@ int show_preview(const char *a, int b) {
     }
     printf("%*s", s_cols - statsize, "");
     termput0("me");
-    termput1("UP", shown + 1);
-    // moving the cursor fully left, necessary for libreadline but not libedit
-    termput1("LE", 9999);
+    termput1("LE", s_cols);
+
+    // Now move the cursor back to the beginning of the command line,
+    // and tell readline to redraw.
+    termput1("UP", shown + command_lines);
     rl_forced_update_display();
+
     return 0;
 }
 
@@ -274,7 +304,7 @@ int main(int argc, char *const *argv) {
     setupterm(NULL, 1, NULL);
     rl_startup_hook = setup;
     signal(SIGINT, cleanup);
-    char *line = readline("pipeline> ");
+    char *line = readline(prompt);
     // as far as I'm aware, we'll never reach this point because
     // we always exit with Ctrl-C.
     free(line);
