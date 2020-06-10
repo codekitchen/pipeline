@@ -30,32 +30,6 @@ const size_t prompt_width = 10;
 bool truncate_lines = false;
 int s_lines, s_cols;
 
-int abort_ltz(int res) {
-    if (res < 0) {
-        perror(NULL);
-        exit(res);
-    }
-    return res;
-}
-
-int abort_nz(int res) {
-    if (res != 0) {
-        perror(NULL);
-        exit(res);
-    }
-    return res;
-}
-
-#define abort_null(ptr)                                                        \
-    ({                                                                         \
-        typeof(ptr) _ptr = ptr;                                                \
-        if (!_ptr) {                                                           \
-            perror(NULL);                                                      \
-            exit(-1);                                                          \
-        }                                                                      \
-        _ptr;                                                                  \
-    })
-
 // valid terminfo short commands are available at `man 5 terminfo`
 // http://man7.org/linux/man-pages/man5/terminfo.5.html
 char cmdbuf[100];
@@ -68,6 +42,39 @@ void termput1(char *cmd, int arg1) {
     char *o = tgetstr(cmd, &b);
     putp(tgoto(o, 0, arg1));
 }
+
+void cleanup_abort(int ecode) {
+    printf("\n");
+    termput0("cd");
+    rl_deprep_terminal();
+    exit(ecode);
+}
+
+int abort_ltz(int res) {
+    if (res < 0) {
+        perror(NULL);
+        cleanup_abort(res);
+    }
+    return res;
+}
+
+int abort_nz(int res) {
+    if (res != 0) {
+        perror(NULL);
+        cleanup_abort(res);
+    }
+    return res;
+}
+
+#define abort_null(ptr)                                                        \
+    ({                                                                         \
+        typeof(ptr) _ptr = ptr;                                                \
+        if (!_ptr) {                                                           \
+            perror(NULL);                                                      \
+            cleanup_abort(-1);                                                 \
+        }                                                                      \
+        _ptr;                                                                  \
+    })
 
 // Read a single line from s and print it out. Once max_display_len is reached,
 // keep scanning for the rest of the line but don't print anymore.
@@ -257,9 +264,7 @@ int setup() {
 }
 
 void cleanup(int sig) {
-    printf("\n");
-    termput0("cd");
-    exit(0);
+    cleanup_abort(0);
 }
 
 static struct option const long_options[] = {
