@@ -4,9 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.6] - 2020-07-17
+
 ### Fixed
 
 - Fix display errors when the command line wraps or the cursor is in the middle of a longer command.
+- Fix terminal corruption when the command exits with error.
 
 ## [1.5] - 2020-02-24
 
