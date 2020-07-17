@@ -7,7 +7,7 @@ set -e
 
 VERSION=$1
 TODAY=$(date "+%Y-%m-%d")
-TARBALL=pipeline-$version.tar.gz
+TARBALL=pipeline-$VERSION.tar.gz
 
 : ${VERSION:?"Need to specify a version e.g. 2.0.1"}
 
