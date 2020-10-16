@@ -2,7 +2,7 @@ FROM ubuntu:latest
 
 RUN set -e; \
     apt-get update; \
-    apt-get install -y \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
         autoconf \
         build-essential \
         git \
