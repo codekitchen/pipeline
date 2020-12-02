@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Run the command in the user's default shell, detected via the `$SHELL` environment variable.
+- Allow explicitly setting a different shell using the `--shell` option or the `$PIPELINE_SHELL` environment variable.
+
 ## [1.6] - 2020-07-17
 
 ### Fixed

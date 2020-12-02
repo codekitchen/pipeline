@@ -28,6 +28,10 @@ const char *prompt = "pipeline> ";
 const size_t prompt_width = 10;
 
 bool truncate_lines = false;
+#define DEFAULT_SHELL "/bin/sh"
+const char *shell = DEFAULT_SHELL;
+const char *KNOWN_SHELLS[] = {"sh", "bash", "zsh", "fish", NULL};
+
 int s_lines, s_cols;
 
 // valid terminfo short commands are available at `man 5 terminfo`
@@ -151,7 +155,7 @@ int read_command(size_t max_to_show, const char *command, size_t *count, size_t 
         abort_ltz(dup(child_stdout[1]));
         close(2);
         abort_ltz(dup(child_stderr[1]));
-        execl("/bin/sh", "sh", "-c", command, NULL);
+        execl(shell, shell, "-c", command, NULL);
     }
 
     // parent
@@ -269,6 +273,7 @@ void cleanup(int sig) {
 
 static struct option const long_options[] = {
     {"truncate", no_argument, NULL, 't'},
+    {"shell", required_argument, NULL, 's'},
     {"help", no_argument, NULL, 'h'},
     {"version", no_argument, NULL, 'v'},
     {NULL, 0, NULL, 0}};
@@ -276,7 +281,9 @@ static struct option const long_options[] = {
 void usage(int status) {
     printf("Usage: %s [OPTIONS]\n", program_name);
     printf("\n");
-    printf("    -t, --truncate    Truncate long lines rather than wrapping.\n");
+    printf("    -t, --truncate     Truncate long lines rather than wrapping.\n");
+    printf("    -s, --shell=SHELL  Use the shell at the full path specified,\n");
+    printf("                       rather than reading the $SHELL env var.\n");
     exit(status);
 }
 
@@ -285,15 +292,47 @@ void version() {
     exit(EXIT_SUCCESS);
 }
 
+// Attempt to detect the default shell using the SHELL environment variable.
+// If this doesn't work, fallback to the default of /bin/sh.
+// Note that SHELL isn't always accurate, for instance if you run a different
+// sub-shell from within your default shell, SHELL will still be your
+// default shell.
+// But we're going with this for now.
+void detect_shell() {
+    const char *shellvar = getenv("PIPELINE_SHELL");
+    if (!shellvar)
+        shellvar = getenv("SHELL");
+    if (shellvar)
+        shell = shellvar;
+}
+
+// We have a whitelist of shells known to work with the -c option,
+// if the shell isn't in the whitelist we fallback to /bin/sh.
+void validate_shell() {
+    const char *basename = strrchr(shell, '/');
+    if (basename) {
+        for (const char **known = KNOWN_SHELLS; *known; known++) {
+            if (strcmp(*known, basename+1) == 0)
+                return;
+        }
+    }
+    printf("Unknown shell '%s', falling back to '%s'\n", shell, DEFAULT_SHELL);
+    shell = DEFAULT_SHELL;
+}
+
 int main(int argc, char *const *argv) {
     if (argc)
         program_name = argv[0];
     setlocale(LC_ALL, "");
+    detect_shell();
     int c;
-    while ((c = getopt_long(argc, argv, "thv", long_options, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, "ts:hv", long_options, NULL)) != -1) {
         switch (c) {
         case 't':
             truncate_lines = true;
+            break;
+        case 's':
+            shell = optarg;
             break;
         case 'h':
             usage(EXIT_SUCCESS);
@@ -306,6 +345,7 @@ int main(int argc, char *const *argv) {
         }
     }
 
+    validate_shell();
     setupterm(NULL, 1, NULL);
     rl_startup_hook = setup;
     signal(SIGINT, cleanup);
