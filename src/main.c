@@ -155,7 +155,7 @@ int read_command(size_t max_to_show, const char *command, size_t *count, size_t 
         abort_ltz(dup(child_stdout[1]));
         close(2);
         abort_ltz(dup(child_stderr[1]));
-        execl(shell, shell, "-ic", command, NULL);
+        execl(shell, shell, "-c", command, NULL);
     }
 
     // parent
