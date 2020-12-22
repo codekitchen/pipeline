@@ -1,0 +1,49 @@
+# ---> Description <---
+# The pipeline shell command: It's a utility to make building up a ...
+# ... pipeline of shell commands easier, especially when doing data exploration.
+#
+# ---> Alpine build packages Reference <---
+# For alpine build packages check here --> https://github.com/praekeltfoundation/alpine-buildpack-deps
+#
+#---> Build Image <---
+# docker build -t pipeline:latest -f Dockerfile2 .
+#
+#---> Alias Command <---
+# alias pipeline='docker run -it --rm --name pipeline -v `pwd`:/root pipeline:latest'
+
+FROM alpine:latest
+LABEL maintainer "iAmG-r00t @th3_gr00t <portfolio@th33-gr00t.tk>"
+
+ENV LANG "en_US.UTF-8"
+ENV LANGUAGE "en_US.UTF-8"
+ENV TERM "xterm"
+
+WORKDIR /root/
+
+# Install build dependancy packages to a virtual build-dep to later remove, and install bash
+RUN set -e && \
+    apk add --no-cache --virtual build-dep autoconf \
+      build-base \
+      ncurses-dev \
+      readline-dev \
+      valgrind \
+      curl \
+      wget \
+      git && \
+    apk add --no-cache bash
+
+CMD ["/bin/bash"]
+
+# Download the latest tarball from github and stores it to root directory, ...
+# ... then we untar it, enter the directory, configure, build and install and proceed with ...
+# ... cleanup by remove all pipeline directories and remove all build packages we installed.
+RUN curl -s https://api.github.com/repos/codekitchen/pipeline/releases/latest | grep browser_download_url | cut -d '"' -f 4 | wget --show-progress -P /root/ -qi - && \
+    tar -xzvf pipeline-*.tar.gz && \
+    cd pipeline-** && \
+    ./configure && \
+    make install && \
+    cd; rm -r pipeline-** && \
+    apk del build-dep
+
+ENTRYPOINT pipeline
+
