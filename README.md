@@ -69,7 +69,7 @@ sudo make install
 curl -L https://raw.githubusercontent.com/iAmG-r00t/pipeline/master/Dockerfile2 -o pipeline-dockerfile
 
 # Build a powerline image
-docker build -t powerline -f pipeline-dockerfile .
+docker build -t pipeline:latest -f pipeline-dockerfile .
 
 # Alias
 alias pipeline='docker run -it --rm --name pipeline -v `pwd`:/root pipeline:latest' 
