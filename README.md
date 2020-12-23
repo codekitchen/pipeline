@@ -75,6 +75,4 @@ docker build -t pipeline:latest -f pipeline-dockerfile .
 alias pipeline='docker run -it --rm --name pipeline -v `pwd`:/root pipeline:latest' 
 ```
 
-#### Note
-
-**Docker** has to be installed.
+#### Note: **Docker** has to be already installed.
