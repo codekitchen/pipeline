@@ -17,7 +17,6 @@ RUN set -e; \
         autoconf \
         build-essential \
         curl \
-        tar \
         wget \
         libreadline-dev \
         libncurses5-dev \
